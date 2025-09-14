@@ -1,19 +1,17 @@
+// /pages/api/proxy.js
 import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   try {
-    let { url } = req.query;
+    const { url } = req.query;
 
     if (!url) {
       return res.status(400).json({ error: "Missing url parameter" });
     }
 
-    // Decode it (since we encoded it in frontend)
-    url = decodeURIComponent(url);
-
-    // Validate
-    if (!/^https?:\/\//i.test(url)) {
-      return res.status(400).json({ error: "Invalid URL" });
+    // Ensure it's a valid Binance URL
+    if (!/^https:\/\/api\.binance\.com/i.test(url)) {
+      return res.status(400).json({ error: "Invalid target URL" });
     }
 
     const response = await fetch(url, {
@@ -27,8 +25,11 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("Proxy error:", err);
+    return res.status(500).json({ error: err.message });
   }
 }
+
+
