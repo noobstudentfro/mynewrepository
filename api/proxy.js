@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         // Some APIs (like Binance) require a proper User-Agent
         "User-Agent": "Mozilla/5.0",
       },
-    });
+    }); 
 
     // If Binance returns error (like code:-1102), forward it
     const text = await response.text();
