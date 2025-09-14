@@ -2,35 +2,32 @@ import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   try {
-    const { url } = req.query;
+    let { url } = req.query;
 
     if (!url) {
       return res.status(400).json({ error: "Missing url parameter" });
     }
 
-    // 🔑 Decode encoded URL (fixes interval=1m issue)
-    const targetUrl = decodeURIComponent(url);
+    // Decode it (since we encoded it in frontend)
+    url = decodeURIComponent(url);
 
-    // Make sure the URL starts with http
-    if (!/^https?:\/\//i.test(targetUrl)) {
+    // Validate
+    if (!/^https?:\/\//i.test(url)) {
       return res.status(400).json({ error: "Invalid URL" });
     }
 
-    const response = await fetch(targetUrl, {
+    const response = await fetch(url, {
       headers: {
-        // Some APIs (like Binance) require a proper User-Agent
         "User-Agent": "Mozilla/5.0",
       },
-    }); 
+    });
 
-    // If Binance returns error (like code:-1102), forward it
-    const text = await response.text();
-    try {
-      const data = JSON.parse(text);
-      res.status(response.status).json(data);
-    } catch {
-      res.status(response.status).send(text);
+    if (!response.ok) {
+      return res.status(response.status).json({ error: await response.text() });
     }
+
+    const data = await response.json();
+    res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
