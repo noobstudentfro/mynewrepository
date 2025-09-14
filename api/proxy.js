@@ -1,28 +1,28 @@
 import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-  const { url } = req.query;
-
-  if (!url) {
-    return res.status(400).json({ error: "Missing 'url' query parameter" });
-  }
-
   try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.status(400).json({ error: "Missing url parameter" });
+    }
+
+    // Make sure the URL starts with http
+    if (!/^https?:\/\//i.test(url)) {
+      return res.status(400).json({ error: "Invalid URL" });
+    }
+
     const response = await fetch(url, {
-      method: req.method,
       headers: {
-        "Content-Type": "application/json",
-        ...req.headers
+        // Pass Binance host headers correctly
+        "User-Agent": "Mozilla/5.0",
       },
-      body: req.method !== "GET" ? JSON.stringify(req.body) : undefined
     });
 
-    const data = await response.text();
-
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Content-Type", response.headers.get("content-type") || "application/json");
-    res.status(response.status).send(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const data = await response.json();
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }
