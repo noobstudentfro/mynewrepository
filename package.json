@@ -1,7 +1,6 @@
 {
-  "name": "self-hosted-cors-proxy",
+  "name": "vercel-cors-proxy",
   "version": "1.0.0",
-  "main": "api/proxy.js",
   "type": "module",
   "scripts": {
     "start": "node api/proxy.js"
