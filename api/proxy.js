@@ -1,6 +1,4 @@
 // /pages/api/proxy.js
-import fetch from "node-fetch";
-
 export default async function handler(req, res) {
   try {
     const { url } = req.query;
@@ -9,7 +7,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing url parameter" });
     }
 
-    // Ensure it's a valid Binance URL
+    // ✅ Only allow Binance requests
     if (!/^https:\/\/api\.binance\.com/i.test(url)) {
       return res.status(400).json({ error: "Invalid target URL" });
     }
@@ -17,19 +15,30 @@ export default async function handler(req, res) {
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json",
       },
     });
 
+    const text = await response.text();
+
+    // ✅ Add CORS so browser accepts
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
     if (!response.ok) {
-      return res.status(response.status).json({ error: await response.text() });
+      return res.status(response.status).json({ error: text });
     }
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    // ✅ Try JSON first, fallback to text
+    try {
+      const json = JSON.parse(text);
+      return res.status(200).json(json);
+    } catch {
+      return res.status(200).send(text);
+    }
   } catch (err) {
-    console.error("Proxy error:", err);
+    console.error("❌ Proxy error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
-
-
